@@ -1,6 +1,7 @@
 #include "duckdb.hpp"
 #include "duckdb/common/shared_ptr.hpp"
 #include "duckdb/common/extra_type_info.hpp"
+#include "duckdb/common/string_util.hpp"
 #include "duckdb/common/types/uuid.hpp"
 
 #include "pgduckdb/pgduckdb_types.hpp"
@@ -763,9 +764,11 @@ ConvertPostgresToDuckColumnType(Form_pg_attribute &attribute) {
 	case NUMERICARRAYOID: {
 		auto precision = numeric_typmod_precision(typmod);
 		auto scale = numeric_typmod_scale(typmod);
+		// duckdb's "numeric" type's max supported precision is 38.
 		if (typmod == -1 || precision < 0 || scale < 0 || precision > 38) {
-			auto extra_type_info = duckdb::make_shared_ptr<NumericAsDouble>();
-			base_type = duckdb::LogicalType(duckdb::LogicalTypeId::DOUBLE, std::move(extra_type_info));
+			const auto user_type_info = duckdb::StringUtil::Format(
+				"type precision %d with scale %d", precision, scale);
+			base_type = duckdb::LogicalType::USER(user_type_info);
 		} else {
 			base_type = duckdb::LogicalType::DECIMAL(precision, scale);
 		}
@@ -787,7 +790,7 @@ ConvertPostgresToDuckColumnType(Form_pg_attribute &attribute) {
 		break;
 	}
 	default: {
-		return duckdb::LogicalType::USER("UnsupportedPostgresType (Oid=" + std::to_string(type) + ")");
+		return duckdb::LogicalType::USER(duckdb::StringUtil::Format("UnsupportedPostgresType (Oid=%d)", type));
 	}
 	}
 	if (dimensions > 0) {
