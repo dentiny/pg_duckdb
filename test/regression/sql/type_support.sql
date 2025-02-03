@@ -47,6 +47,11 @@ CREATE TABLE date_tbl(a DATE);
 INSERT INTO date_tbl SELECT CAST(a AS DATE) FROM (VALUES ('2022-04-29'::DATE), (NULL), ('2023-05-15'::DATE)) t(a);
 SELECT * FROM date_tbl;
 
+-- INTERVAL
+CREATE TABLE interval_tbl(a INTERVAL);
+INSERT INTO interval_tbl SELECT CAST(a AS INTERVAL) FROM (VALUES ('2 years 5 months 1 day 3 hours 30 minutes 5 seconds'::INTERVAL), (NULL)) t(a);
+SELECT * FROM interval_tbl;
+
 -- TIMESTAMP
 CREATE TABLE timestamp_tbl(a TIMESTAMP);
 INSERT INTO timestamp_tbl SELECT CAST(a AS TIMESTAMP) FROM (VALUES
