@@ -53,6 +53,12 @@ SELECT * FROM bool_tbl;
  t
 (3 rows)
 
+-- BIT
+CREATE TABLE bit_tbl(a BIT(5) NOT NULL);
+INSERT INTO bit_tbl SELECT CAST(a AS BIT(5)) from (VALUES (''), (B'1'), (B'10100')) t(a);
+SELECT * FROM bit_tbl;
+SELECT * FROM bit_tbl WHERE a = B'10100';
+
 --- VARCHAR
 CREATE TABLE bpchar_tbl(a CHAR(25) NOT NULL);
 INSERT INTO bpchar_tbl SELECT CAST(a AS VARCHAR) from (VALUES (''), ('test'), ('this is a long string')) t(a);
