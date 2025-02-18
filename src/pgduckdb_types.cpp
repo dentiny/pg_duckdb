@@ -156,6 +156,11 @@ struct DecimalConversionDouble {
 };
 
 static inline Datum
+ConvertBitDatum(const duckdb::Value &value) {
+	return BoolGetDatum(value.GetValue<int8_t>());
+}
+
+static inline Datum
 ConvertBoolDatum(const duckdb::Value &value) {
 	return value.GetValue<bool>();
 }
@@ -561,6 +566,19 @@ struct PostgresTypeTraits<NUMERICOID> {
 	}
 };
 
+// BIT type
+template <>
+struct PostgresTypeTraits<BITOID> {
+	static constexpr int16_t typlen = 1;
+	static constexpr bool typbyval = true;
+	static constexpr char typalign = 'c';
+
+	static inline Datum
+	ToDatum(const duckdb::Value &val) {
+		return ConvertBitDatum(val);
+	}
+};
+
 // VARCHAR type
 template <>
 struct PostgresTypeTraits<VARCHAROID> {
@@ -626,6 +644,7 @@ using DateArray = PODArray<PostgresOIDMapping<DATEOID>>;
 using TimestampArray = PODArray<PostgresOIDMapping<TIMESTAMPOID>>;
 using IntervalArray = PODArray<PostgresOIDMapping<INTERVALOID>>;
 using UUIDArray = PODArray<PostgresOIDMapping<UUIDOID>>;
+using BitArray = PODArray<PostgresOIDMapping<BITOID>>;
 using VarCharArray = PODArray<PostgresOIDMapping<VARCHAROID>>;
 using NumericArray = PODArray<PostgresOIDMapping<NUMERICOID>>;
 using ByteArray = PODArray<PostgresOIDMapping<BYTEAOID>>;
@@ -763,6 +782,9 @@ ConvertDuckToPostgresValue(TupleTableSlot *slot, duckdb::Value &value, idx_t col
 	Oid oid = slot->tts_tupleDescriptor->attrs[col].atttypid;
 
 	switch (oid) {
+	case BITOID:
+		slot->tts_values[col] = ConvertBitDatum(value);
+		break;	
 	case BOOLOID:
 		slot->tts_values[col] = ConvertBoolDatum(value);
 		break;
@@ -823,6 +845,10 @@ ConvertDuckToPostgresValue(TupleTableSlot *slot, duckdb::Value &value, idx_t col
 	}
 	case BYTEAOID: {
 		slot->tts_values[col] = ConvertBinaryDatum(value);
+		break;
+	}
+	case BITARRAYOID: {
+		ConvertDuckToPostgresArray<BitArray>(slot, value, col);
 		break;
 	}
 	case BOOLARRAYOID: {
@@ -909,6 +935,9 @@ numeric_typmod_scale(int32 typmod) {
 duckdb::LogicalType
 ConvertPostgresToBaseDuckColumnType(Form_pg_attribute &attribute) {
 	switch (attribute->atttypid) {
+	case BITOID:
+	case BITARRAYOID:
+		return duckdb::LogicalType::BIT;
 	case BOOLOID:
 	case BOOLARRAYOID:
 		return duckdb::LogicalTypeId::BOOLEAN;
@@ -996,6 +1025,8 @@ ConvertPostgresToDuckColumnType(Form_pg_attribute &attribute) {
 Oid
 GetPostgresArrayDuckDBType(const duckdb::LogicalType &type) {
 	switch (type.id()) {
+	case duckdb::LogicalTypeId::BIT:
+		return BITARRAYOID;
 	case duckdb::LogicalTypeId::BOOLEAN:
 		return BOOLARRAYOID;
 	case duckdb::LogicalTypeId::TINYINT:
@@ -1043,6 +1074,8 @@ GetPostgresArrayDuckDBType(const duckdb::LogicalType &type) {
 Oid
 GetPostgresDuckDBType(const duckdb::LogicalType &type) {
 	switch (type.id()) {
+	case duckdb::LogicalTypeId::BIT:
+		return BITOID;
 	case duckdb::LogicalTypeId::BOOLEAN:
 		return BOOLOID;
 	case duckdb::LogicalTypeId::TINYINT:
@@ -1095,8 +1128,8 @@ GetPostgresDuckDBType(const duckdb::LogicalType &type) {
 	case duckdb::LogicalTypeId::BLOB:
 		return BYTEAOID;
 	default: {
-		elog(WARNING, "(PGDuckDB/GetPostgresDuckDBType) Could not convert DuckDB type: %s to Postgres type",
-		     type.ToString().c_str());
+		elog(WARNING, "%s:%d (PGDuckDB/GetPostgresDuckDBType) Could not convert DuckDB type: %s to Postgres type",
+		    __FILE__, __LINE__, type.ToString().c_str());
 		return InvalidOid;
 	}
 	}
@@ -1213,6 +1246,10 @@ ConvertDecimal(const NumericVar &numeric) {
 duckdb::Value
 ConvertPostgresParameterToDuckValue(Datum value, Oid postgres_type) {
 	switch (postgres_type) {
+	case BITOID: {
+		char single_bit = DatumGetChar(value);
+		return duckdb::Value::BIT(std::string(single_bit, 1));
+	}
 	case BOOLOID:
 		return duckdb::Value::BOOLEAN(DatumGetBool(value));
 	case INT2OID:
@@ -1283,6 +1320,7 @@ ConvertPostgresToDuckValue(Oid attr_type, Datum value, duckdb::Vector &result, i
 	case duckdb::LogicalTypeId::BIGINT:
 		Append<int64_t>(result, DatumGetInt64(value), offset);
 		break;
+	case duckdb::LogicalTypeId::BIT:
 	case duckdb::LogicalTypeId::VARCHAR: {
 		// NOTE: This also handles JSON
 		if (attr_type == JSONBOID) {

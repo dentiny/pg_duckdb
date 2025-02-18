@@ -23,6 +23,16 @@ CREATE TABLE bool_tbl(a BOOL);
 INSERT INTO bool_tbl SELECT CAST(a AS BOOL) from (VALUES (False), (NULL), (True)) t(a);
 SELECT * FROM bool_tbl;
 
+-- BIT
+CREATE TABLE single_bit_tbl(a BIT NOT NULL);
+INSERT INTO single_bit_tbl SELECT CAST(a AS BIT) from (VALUES (B'1')) t(a);
+SELECT * FROM single_bit_tbl;
+
+CREATE TABLE bit_tbl(a BIT(5) NOT NULL);
+INSERT INTO bit_tbl SELECT CAST(a AS BIT(5)) from (VALUES (''), (B'1'), (B'10100')) t(a);
+SELECT * FROM bit_tbl;
+SELECT * FROM bit_tbl WHERE a = B'10100';
+
 --- VARCHAR
 CREATE TABLE bpchar_tbl(a CHAR(25) NOT NULL);
 INSERT INTO bpchar_tbl SELECT CAST(a AS VARCHAR) from (VALUES (''), ('test'), ('this is a long string')) t(a);
@@ -34,7 +44,6 @@ CREATE TABLE varchar_tbl(a VARCHAR);
 INSERT INTO varchar_tbl SELECT CAST(a AS VARCHAR) from (VALUES (''), (NULL), ('test'), ('this is a long string')) t(a);
 SELECT * FROM varchar_tbl;
 SELECT * FROM varchar_tbl WHERE a = 'test';
-
 
 --- TEXT
 CREATE TABLE text_tbl(a TEXT);
