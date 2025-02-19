@@ -8,6 +8,12 @@
 #include "pgduckdb/pgduckdb_utils.hpp"
 #include "pgduckdb/scan/postgres_scan.hpp"
 
+#include "duckdb/common/types/varint.hpp"
+
+
+#include <fstream>
+#include <iostream>
+
 extern "C" {
 
 #include "pgduckdb/vendor/pg_numeric_c.hpp"
@@ -333,6 +339,21 @@ ConvertNumeric(const duckdb::Value &ddb_value, idx_t scale, NumericVar &result) 
 }
 
 static Datum
+ConvertVarintToNumeric(const duckdb::Value &ddb_value) {
+	double double_val = 0;
+	bool strict = false; // unused
+	auto binary_string = ddb_value.GetValueUnsafe<std::string>();
+	duckdb::Varint::VarintToDouble(binary_string, double_val, strict);
+	const int64_t int64_val = static_cast<int64_t>(double_val);
+	const int32_t 
+	const decimal_val = duckdb::Value::DECIMAL(int64_val, /*width=*/0, /*scale=*/0);
+	
+
+
+	return ConvertDoubleDatum(duckdb::Value(double_val));
+}
+
+static Datum
 ConvertNumericDatum(const duckdb::Value &value) {
 	auto value_type_id = value.type().id();
 	if (value_type_id == duckdb::LogicalTypeId::DOUBLE) {
@@ -363,6 +384,9 @@ ConvertNumericDatum(const duckdb::Value &value) {
 		break;
 	case duckdb::PhysicalType::UINT128:
 		ConvertNumeric<uhugeint_t, DecimalConversionHugeint>(value, scale, numeric_var);
+		break;
+	case duckdb::PhysicalType::VARCHAR:
+		return ConvertVarintToNumeric(value);
 		break;
 	default:
 		throw duckdb::InvalidInputException(
@@ -814,7 +838,7 @@ ConvertDuckToPostgresValue(TupleTableSlot *slot, duckdb::Value &value, idx_t col
 		break;
 	}
 	case NUMERICOID: {
-		slot->tts_values[col] = ConvertNumericDatum(value);
+		slot->tts_values[col] = value.type() == duckdb::LogicalType::VARINT ? ConvertVarintToNumeric(value) : ConvertNumericDatum(value);
 		break;
 	}
 	case UUIDOID: {
@@ -1092,6 +1116,8 @@ GetPostgresDuckDBType(const duckdb::LogicalType &type) {
 		}
 		return GetPostgresArrayDuckDBType(*duck_type);
 	}
+	case duckdb::LogicalTypeId::VARINT:
+		return NUMERICOID;
 	case duckdb::LogicalTypeId::BLOB:
 		return BYTEAOID;
 	default: {
