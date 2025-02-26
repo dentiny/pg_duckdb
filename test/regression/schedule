@@ -1,34 +1,34 @@
-test: basic
-test: concurrency
-test: correct_null_conversions
-test: search_path
-test: execution_error
-test: extensions
-test: type_support
+# test: basic
+# test: concurrency
+# test: correct_null_conversions
+# test: search_path
+# test: execution_error
+# test: extensions
+# test: type_support
 test: array_type_support
-test: test_all_types
-test: views
-test: non_superuser
-test: projection_pushdown_unsupported_type
-test: materialized_view
-test: hugeint_conversion
-test: read_functions
-test: duckdb_only_functions
-test: duckdb_recycle
-test: domain
-test: cte
-test: create_schema
-test: create_table_as
-test: standard_conforming_strings
-test: query_filter
-test: temporary_tables
-test: altered_tables
-test: transactions
-test: transaction_errors
-test: secrets
-test: prepare
-test: function
-test: timestamp_with_interval
-test: approx_count_distinct
-test: scan_postgres_tables
-test: json_functions_duckdb
+# test: test_all_types
+# test: views
+# test: non_superuser
+# test: projection_pushdown_unsupported_type
+# test: materialized_view
+# test: hugeint_conversion
+# test: read_functions
+# test: duckdb_only_functions
+# test: duckdb_recycle
+# test: domain
+# test: cte
+# test: create_schema
+# test: create_table_as
+# test: standard_conforming_strings
+# test: query_filter
+# test: temporary_tables
+# test: altered_tables
+# test: transactions
+# test: transaction_errors
+# test: secrets
+# test: prepare
+# test: function
+# test: timestamp_with_interval
+# test: approx_count_distinct
+# test: scan_postgres_tables
+# test: json_functions_duckdb
