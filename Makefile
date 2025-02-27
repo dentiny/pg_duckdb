@@ -29,13 +29,13 @@ ifeq ($(DUCKDB_BUILD), Debug)
 	DUCKDB_BUILD_TYPE = debug
 	DUCKDB_MAKE_TARGET = debug
 else ifeq ($(DUCKDB_BUILD), ReleaseStatic)
-	DUCKDB_BUILD_CXX_FLAGS =
-	DUCKDB_BUILD_TYPE = release
-	DUCKDB_MAKE_TARGET = bundle-library
+	DUCKDB_BUILD_CXX_FLAGS = -g -O0 -D_GLIBCXX_ASSERTIONS
+	DUCKDB_BUILD_TYPE = debug
+	DUCKDB_MAKE_TARGET = debug
 else
-	DUCKDB_BUILD_CXX_FLAGS =
-	DUCKDB_BUILD_TYPE = release
-	DUCKDB_MAKE_TARGET = release
+	DUCKDB_BUILD_CXX_FLAGS = -g -O0 -D_GLIBCXX_ASSERTIONS
+	DUCKDB_BUILD_TYPE = debug
+	DUCKDB_MAKE_TARGET = debug
 endif
 
 PG_DUCKDB_LINK_FLAGS = -Wl,-rpath,$(PG_LIB)/ -lpq -Lthird_party/duckdb/build/$(DUCKDB_BUILD_TYPE)/src -L$(PG_LIB) -lstdc++ -llz4
