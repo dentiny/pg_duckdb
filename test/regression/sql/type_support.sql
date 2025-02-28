@@ -53,6 +53,13 @@ INSERT INTO interval_tbl SELECT CAST(a AS INTERVAL) FROM (VALUES ('2 years 5 mon
 SELECT * FROM interval_tbl;
 SELECT * FROM interval_tbl WHERE a = '5 day 5 hours'::INTERVAL;
 
+-- VARBIT
+CREATE TABLE varbit_tbl(a VARBIT);
+INSERT INTO varbit_tbl SELECT CAST(a AS VARBIT) FROM (VALUES (B'0011'::VARBIT)) t(a);
+-- INSERT INTO varbit_tbl SELECT CAST(a AS VARBIT) FROM (VALUES (B'10101010'::VARBIT), (B'0011'::VARBIT), (NULL)) t(a);
+SELECT * FROM varbit_tbl;
+SELECT * FROM varbit_tbl WHERE a = B'0011'::VARBIT;
+
 -- TIME
 CREATE TABLE time_tbl(a TIME);
 INSERT INTO time_tbl SELECT CAST(a AS TIME) FROM (VALUES ('13:45:30'::TIME), ('08:15:00'::TIME), (NULL)) t(a);
